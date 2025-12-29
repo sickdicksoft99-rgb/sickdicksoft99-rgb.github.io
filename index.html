@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Moto Kurye İzmir | Pro Panel</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --mac-bg: #F5F5F7;
+            --mac-card: rgba(255, 255, 255, 0.85);
+            --mac-border: rgba(0, 0, 0, 0.1);
+            --mac-text: #1D1D1F;
+            --mac-text-secondary: #86868B;
+            --mac-accent: #0071E3;
+            --mac-danger: #FF3B30;
+            --mac-green: #34C759;
+        }
+
+        body { 
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--mac-bg); 
+            color: var(--mac-text);
+            margin: 0; padding: 15px;
+            display: flex; justify-content: center;
+        }
+
+        .mac-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-gap: 12px;
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .glass-card {
+            background: var(--mac-card);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--mac-border);
+            border-radius: 20px;
+            padding: 16px;
+        }
+
+        .full { grid-column: span 2; }
+        .label { font-size: 10px; font-weight: 700; color: var(--mac-text-secondary); text-transform: uppercase; margin-bottom: 8px; display: block; }
+        
+        input, select {
+            background: rgba(0,0,0,0.05); border: 1px solid transparent; color: var(--mac-text); 
+            width: 100%; font-size: 15px; font-weight: 600; padding: 12px; 
+            outline: none; border-radius: 12px; box-sizing: border-box;
+        }
+        input:focus { border-color: var(--mac-accent); background: white; }
+
+        .mac-btn {
+            width: 100%; padding: 12px; border-radius: 10px; border: none;
+            font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.3s;
+            background: #E8E8ED; color: var(--mac-text);
+        }
+        .mac-btn.active-night { background: #5E5CE6; color: white; }
+        .mac-btn.active-pazarlik { background: var(--mac-danger); color: white; }
+
+        .btn-primary {
+            background: var(--mac-accent); color: white; border: none;
+            width: 100%; padding: 18px; border-radius: 15px;
+            font-size: 16px; font-weight: 700; cursor: pointer;
+        }
+
+        #sonucAlani { display: none; grid-column: span 2; grid-template-columns: repeat(2, 1fr); grid-gap: 12px; margin-top: 10px; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .res-hero { grid-column: span 2; text-align: center; background: white; border: 1px solid var(--mac-accent); }
+        .price-hero { font-size: 48px; font-weight: 800; color: var(--mac-text); margin: 5px 0; letter-spacing: -2px; }
+
+        .res-box { text-align: center; background: white; }
+        .price-val { font-size: 20px; font-weight: 700; color: var(--mac-accent); }
+
+        .msg-preview {
+            grid-column: span 2; font-size: 12px; color: var(--mac-text-secondary);
+            background: rgba(0,0,0,0.03); padding: 15px; border-radius: 15px;
+            border: 1px dashed var(--mac-border); white-space: pre-wrap;
+        }
+
+        .copy-btn {
+            grid-column: span 2; background: var(--mac-text); color: white;
+            border: none; padding: 16px; border-radius: 14px;
+            font-size: 14px; font-weight: 700; cursor: pointer;
+        }
+        .copy-success { background: var(--mac-green) !important; }
+
+        /* API Key Giriş Paneli */
+        #apiStatus { font-size: 9px; text-align: center; color: var(--mac-text-secondary); cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="mac-container">
+    <div class="full" style="padding: 10px 5px; display: flex; justify-content: space-between; align-items: center;">
+        <h2 style="margin:0; font-weight: 800; font-size: 1.2rem; color: var(--mac-accent);">Moto Kurye İzmir</h2>
+        <div id="apiStatus" onclick="resetApiKey()">🔑 Key Yönetimi</div>
+    </div>
+
+    <div class="glass-card full">
+        <span class="label">📍 Rota Sorgulama</span>
+        <input type="text" id="origin" placeholder="Alım adresi...">
+        <input type="text" id="destination" placeholder="Teslimat adresi..." style="margin-top: 8px;">
+        <button onclick="calculateDistance()" style="background:transparent; color:var(--mac-accent); border:none; padding:12px 0 0 0; font-size:12px; font-weight:700; cursor:pointer; width:100%; text-align:left;">Mesafeyi Google ile Bul →</button>
+    </div>
+
+    <div class="glass-card">
+        <span class="label">Mesafe (KM)</span>
+        <input type="number" id="kmInput" placeholder="0" onkeypress="if(event.key === 'Enter') hesapla()">
+    </div>
+    <div class="glass-card">
+        <span class="label">Ağırlık (KG)</span>
+        <input type="number" id="kgInput" value="1" onkeypress="if(event.key === 'Enter') hesapla()">
+    </div>
+
+    <div class="glass-card full">
+        <span class="label">Hizmet Seviyesi</span>
+        <select id="hizmetTipi" onchange="hesapla()">
+            <option value="1">Standart Gönderi (x1.0)</option>
+            <option value="1.2">Ekspres Teslimat (x1.2)</option>
+            <option value="2.0">VIP Özel Kurye (x2.0)</option>
+        </select>
+    </div>
+
+    <div class="full" style="display: grid; grid-template-columns: 1fr 1fr; grid-gap: 12px;">
+        <button class="mac-btn" id="nightBtn" onclick="toggleNight()">🌙 Gece (+%50)</button>
+        <button class="mac-btn" id="discountBtn" onclick="toggleDiscount()">🤝 Pazarlık Yap</button>
+    </div>
+
+    <div class="glass-card full" id="discountSettings" style="display: none;">
+        <span class="label">Pazarlık İndirim Oranı %</span>
+        <input type="number" id="discountRate" value="15" onkeypress="if(event.key === 'Enter') hesapla()">
+    </div>
+
+    <div class="full">
+        <button class="btn-primary" onclick="hesapla()">Teklifi Hesapla</button>
+    </div>
+
+    <div id="sonucAlani">
+        <div class="glass-card res-hero">
+            <span id="hizmetEtiketi" style="font-size: 10px; font-weight: 800; opacity: 0.6;">STANDART</span>
+            <div class="price-hero" id="musteriFiyat">0 ₺</div>
+            <div id="pazarlikLabel" style="font-size: 11px; color: var(--mac-danger); font-weight: 800; display: none;">PAZARLIK UYGULANDI</div>
+        </div>
+
+        <div class="glass-card res-box">
+            <span class="label">Kurye Payı</span>
+            <div class="price-val" id="kuryeFiyat">0 ₺</div>
+        </div>
+        <div class="glass-card res-box">
+            <span class="label">Şirket Kârı</span>
+            <div class="price-val" id="sirketKar" style="color: var(--mac-green);">0 ₺</div>
+        </div>
+
+        <div class="msg-preview" id="msgPreview"></div>
+        <button class="copy-btn" id="copyBtn" onclick="kopyala()">📋 WhatsApp Taslağını Kopyala</button>
+    </div>
+</div>
+
+<input type="checkbox" id="geceAktif" style="display:none;">
+<input type="checkbox" id="pazarlikAktif" style="display:none;">
+
+<script src="js/ayarlar.js"></script>
+
+    <script src="js/hesapla.js"></script>
+
+    <script src="js/arayuz.js"></script>
+
+</body>
+</html>
